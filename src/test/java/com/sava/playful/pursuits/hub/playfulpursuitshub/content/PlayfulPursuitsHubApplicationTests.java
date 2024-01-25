@@ -1,4 +1,4 @@
-package com.sava.playful.pursuits.hub.playfulpursuitshub;
+package com.sava.playful.pursuits.hub.playfulpursuitshub.content;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
