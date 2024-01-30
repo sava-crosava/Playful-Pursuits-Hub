@@ -3,6 +3,7 @@ package com.sava.playful.pursuits.hub.playfulpursuitshub.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,12 @@ public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String title, descriptions, fileName;
+    @NotNull(message = "Title cannot be null")
+    private String title;
+    @NotNull(message = "Descriptions cannot be null")
+    private String descriptions;
+    private String videoName;
+    private String imageName;
 
     @Builder.Default
     @Column(nullable = false, columnDefinition = "bigint default 0")
@@ -37,12 +43,12 @@ public class Post {
 
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
-            name = "post_category",
+            name = "post_tag",
             joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id")
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     @JsonIgnoreProperties("posts")
-    private Set<Category> categories = new HashSet<>();
+    private Set<Tag> tags = new HashSet<>();
 
     @Override
     public int hashCode() {

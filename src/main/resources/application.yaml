@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/hab_db
+    url: jdbc:mysql://localhost:3306/hab_v2_db
     username: root
     password: Test
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -13,7 +13,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
+  servlet:
+    multipart:
+      max-file-size: 128MB
+      max-request-size: 128MB
 
 cloud:
   aws:

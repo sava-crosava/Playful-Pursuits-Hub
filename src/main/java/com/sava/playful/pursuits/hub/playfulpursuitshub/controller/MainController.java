@@ -1,10 +1,11 @@
 package com.sava.playful.pursuits.hub.playfulpursuitshub.controller;
 
 
-import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Category;
+import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Tag;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Post;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.PostService;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.StorageService;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.core.io.ByteArrayResource;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.util.List;
 
 @RestController
-@RequestMapping
+@RequestMapping("api/v1/pphub")
 @AllArgsConstructor
 public class MainController
 {
@@ -29,44 +30,43 @@ public class MainController
 
     private final StorageService storageService;
 
-
+    //TODO browsing error (ignore or log)
     @GetMapping(value = "findVideoById/{postId}", produces = { MediaType.APPLICATION_OCTET_STREAM_VALUE })
     public ResponseEntity<StreamingResponseBody> getPartialObject(
             @PathVariable Long postId,
             @RequestHeader(value = "Range", required = false) String rangeHeader) {
 
-            return postService.getPartialObject(postId, rangeHeader);
+        return postService.getPartialObject(postId, rangeHeader);
     }
-
-
 
     @GetMapping("home")
     public List<Post> findAllPost(){
         return postService.findAllPost();
     }
 
-    @GetMapping("findByCategory/{categoryName}")
-    public List<Post> findPostsByCategoryName(@PathVariable String categoryName){
-        return postService.findPostsByCategoryName(categoryName);
+    @GetMapping("findByTag/{tagName}")
+    public List<Post> findPostsByTagName(@PathVariable String tagName){
+        return postService.findPostsByTagName(tagName);
     }
 
-
+    //TODO when creating a query, is it better to return a message instead of a post?
     @PostMapping("createNewPost")
-    public ResponseEntity<?> createPost( @RequestParam(value = "file") MultipartFile file,
+    public ResponseEntity<?> createPost( @RequestParam(value = "video") MultipartFile video,
+                                         @RequestParam(value = "image") MultipartFile image,
                                          @RequestPart("post") Post post) {
         if (post == null) {
             return ResponseEntity.badRequest().body("Post cannot be null");
         }
-        if (file == null || file.isEmpty()) {
+        if (video == null || video.isEmpty()) {
             return ResponseEntity.badRequest().body("File cannot be null or empty");
         }
-        for (Category category : post.getCategories()) {
-            if (category == null) {
-                return ResponseEntity.badRequest().body("Category cannot be null");
+        for (Tag tag : post.getTags()) {
+            if (tag == null) {
+                return ResponseEntity.badRequest().body("Tag cannot be null");
             }
         }
         try {
-            return ResponseEntity.ok(postService.createPost(post, file));
+            return ResponseEntity.ok(postService.createPost(post, video, image));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("An error occurred while processing the request");
@@ -85,7 +85,7 @@ public class MainController
 
     @GetMapping("/download/{postId}")
     public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable Long postId) {
-        String fileName = postService.findPostById(postId).getFileName();
+        String fileName = postService.findPostById(postId).getVideoName();
         byte[] data = storageService.downloadFile(fileName);
         ByteArrayResource resource = new ByteArrayResource(data);
         return ResponseEntity
@@ -96,10 +96,4 @@ public class MainController
                 .body(resource);
     }
 
-
-//    @GetMapping()
-//    public String getHello(){
-//        //todo
-//        return "Hello";
-//    }
 }

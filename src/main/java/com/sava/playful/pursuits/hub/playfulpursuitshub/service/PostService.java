@@ -12,15 +12,16 @@ public interface PostService {
     Post findByTitle(String title);
     Post updatePost(Post post);
 
-    List<Post> findPostsByCategoryName(String categoryName);
+    List<Post> findPostsByTagName(String tagName);
 
     Post savePostWithCategories(Post post);
 
-    Post createPost(Post post, MultipartFile file);
+    Post createPost(Post post, MultipartFile video, MultipartFile image);
 
     String deletePost(Long postId);
 
     Post findPostById(Long postId);
 
     ResponseEntity<StreamingResponseBody> getPartialObject(Long postId, String rangeHeader);
+    void updateFileNames(Post post, String videoName, String imageName);
 }

@@ -1,6 +1,7 @@
 package com.sava.playful.pursuits.hub.playfulpursuitshub.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,16 +14,17 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Category {
+public class Tag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nameCategory;
+    @NotNull(message = "Tag name cannot be null")
+    private String tagName;
 
-    @ManyToMany(mappedBy = "categories")
-    @JsonIgnoreProperties("categories")
+    @ManyToMany(mappedBy = "tags")
+    @JsonIgnoreProperties("tags")
     private Set<Post> posts = new HashSet<>();
 
     @Override

@@ -1,8 +1,8 @@
 package com.sava.playful.pursuits.hub.playfulpursuitshub.service.impl;
 
-import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Category;
+import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Tag;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Post;
-import com.sava.playful.pursuits.hub.playfulpursuitshub.repository.CategoryRepository;
+import com.sava.playful.pursuits.hub.playfulpursuitshub.repository.TagRepository;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.repository.PostRepository;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.PostService;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.StorageService;
@@ -25,15 +25,16 @@ import java.util.Set;
 @Primary
 public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
-    private final CategoryRepository categoryRepository;
+    private final TagRepository tagRepository;
     private final StorageService service;
 
     @Override
     @Transactional
-    public Post createPost(Post post, MultipartFile file){
+    public Post createPost(Post post, MultipartFile video, MultipartFile image){
         Post postWithFile = savePostWithCategories(post);
-        String fullFileName = service.uploadFile(file);
-        updateNameFile(postWithFile.getId(), fullFileName);
+        String fullVideoName = service.uploadFile(video);
+        String fullImageName = service.uploadFile(image);
+        updateFileNames(postWithFile, fullVideoName, fullImageName);
         return postWithFile;
     }
 
@@ -42,7 +43,7 @@ public class PostServiceImpl implements PostService {
     public String deletePost(Long id) {
         Post post = postRepository.findPostById(id);
         String title = post.getTitle();
-        String fileName = post.getFileName();
+        String fileName = post.getVideoName();
         if(post != null){
             postRepository.deleteById(id);
             service.deleteFile(fileName);
@@ -58,12 +59,13 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public ResponseEntity<StreamingResponseBody> getPartialObject(Long postId, String rangeHeader) {
-        String fileName = postRepository.findFileNameById(postId);
+        String fileName = postRepository.findVideoNameById(postId);
         return service.getPartialObject(fileName, rangeHeader);
     }
 
-    public List<Post> findPostsByCategoryName(String categoryName){
-        return postRepository.findPostsByCategoryName(categoryName);
+    @Override
+    public List<Post> findPostsByTagName(String tagName){
+        return postRepository.findPostsByTagName(tagName);
     }
 
     @Override
@@ -81,30 +83,25 @@ public class PostServiceImpl implements PostService {
         return null;
     }
 
-
+    @Override
     public Post savePostWithCategories(Post post) {
-        Set<Category> persistedCategories = new HashSet<>();
-        for (Category category : post.getCategories()) {
-            Category persistedCategory = categoryRepository.findByNameCategory(category.getNameCategory());
-            if (persistedCategory != null) {
-                persistedCategories.add(persistedCategory);
+        Set<Tag> persistedCategories = new HashSet<>();
+        for (Tag tag : post.getTags()) {
+            Tag persistedTag = tagRepository.findByTagName(tag.getTagName());
+            if (persistedTag != null) {
+                persistedCategories.add(persistedTag);
             } else {
-                persistedCategories.add(category);
+                persistedCategories.add(tag);
             }
         }
-        post.setCategories(persistedCategories);
+        post.setTags(persistedCategories);
 
         return postRepository.save(post);
     }
-
-    public Post updateNameFile(Long postId, String newNameFile) {
-        Optional<Post> optionalPost = postRepository.findById(postId);
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            post.setFileName(newNameFile);
-            return postRepository.save(post);
-        } else {
-            throw new EntityNotFoundException("Post with id " + postId + " not found");
-        }
+    @Override
+    public void updateFileNames(Post post, String videoName, String imageName) {
+            post.setVideoName(videoName);
+            post.setImageName(imageName);
+            postRepository.save(post);
     }
 }

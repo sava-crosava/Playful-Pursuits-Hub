@@ -13,10 +13,10 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long> {
     Post findPostByTitle(String title);
     Post findPostById(Long id);
-    @Query("SELECT p FROM Post p JOIN FETCH p.categories c WHERE c.nameCategory = :categoryName")
-    List<Post> findPostsByCategoryName(@Param("categoryName") String categoryName);
+    @Query("SELECT p FROM Post p JOIN FETCH p.tags c WHERE c.tagName = :tagName")
+    List<Post> findPostsByTagName(@Param("tagName") String tagName);
 
-    @Query("SELECT p.fileName FROM Post p WHERE p.id = :postId")
-    String findFileNameById(Long postId);
+    @Query("SELECT p.videoName FROM Post p WHERE p.id = :postId")
+    String findVideoNameById(Long postId);
 }
 
