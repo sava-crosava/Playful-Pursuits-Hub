@@ -6,7 +6,6 @@ import com.sava.playful.pursuits.hub.playfulpursuitshub.repository.TagRepository
 import com.sava.playful.pursuits.hub.playfulpursuitshub.repository.PostRepository;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.PostService;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.StorageService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Primary;
@@ -17,7 +16,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
