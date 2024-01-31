@@ -8,10 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Builder
@@ -27,7 +26,7 @@ public class Post {
     @NotNull(message = "Descriptions cannot be null")
     private String descriptions;
     private String videoName;
-    private String imageName;
+    private String imageName;//todo change on logoImageName
 
     @Builder.Default
     @Column(nullable = false, columnDefinition = "bigint default 0")
@@ -41,6 +40,16 @@ public class Post {
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private Long dislikes = 0L;
 
+    @Temporal(TemporalType.DATE)
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    private Date dateOfPublication;
+
+    @ElementCollection(targetClass = Category.class)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "post_categories", joinColumns = @JoinColumn(name = "post_id"))
+    @Column(name = "category")
+    private Set<Category> categories = new HashSet<>();
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "post_tag",
@@ -49,6 +58,10 @@ public class Post {
     )
     @JsonIgnoreProperties("posts")
     private Set<Tag> tags = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "chanel_id", referencedColumnName = "id")
+    private Channel channel;
 
     @Override
     public int hashCode() {
