@@ -1,10 +1,13 @@
 package com.sava.playful.pursuits.hub.playfulpursuitshub.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -23,4 +26,13 @@ public class MyUser {
 
     @OneToOne(mappedBy = "myUser", cascade = CascadeType.ALL)
     private Channel channel;
+
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "user_channel",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "channel_id")
+    )
+    @JsonIgnoreProperties("users")
+    private Set<Channel> channels = new HashSet<>();
 }

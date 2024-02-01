@@ -30,6 +30,18 @@ public class MainController
 
     private final StorageService storageService;
 
+
+    @GetMapping("home")
+    public List<Post> findAllPost(){
+        return postService.findAllPost();
+    }
+
+
+
+
+
+
+
     //TODO browsing error (ignore or log)
     @GetMapping(value = "findVideoById/{postId}", produces = { MediaType.APPLICATION_OCTET_STREAM_VALUE })
     public ResponseEntity<StreamingResponseBody> getPartialObject(
@@ -39,10 +51,7 @@ public class MainController
         return postService.getPartialObject(postId, rangeHeader);
     }
 
-    @GetMapping("home")
-    public List<Post> findAllPost(){
-        return postService.findAllPost();
-    }
+
 
     @GetMapping("findByTag/{tagName}")
     public List<Post> findPostsByTagName(@PathVariable String tagName){
