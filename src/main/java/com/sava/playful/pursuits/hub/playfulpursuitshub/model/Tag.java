@@ -2,6 +2,7 @@ package com.sava.playful.pursuits.hub.playfulpursuitshub.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +22,7 @@ public class Tag {
     private Long id;
 
     @NotNull(message = "Tag name cannot be null")
+    @Size(min = 2, max = 32, message = "Tag name should be between 5 and 32 characters")
     private String tagName;
 
     @ManyToMany(mappedBy = "tags")
