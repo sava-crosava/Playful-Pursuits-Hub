@@ -1,13 +1,16 @@
 package com.sava.playful.pursuits.hub.playfulpursuitshub.controller;
 
 
+import com.sava.playful.pursuits.hub.playfulpursuitshub.DTO.PostResponseDTO;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Tag;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Post;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.PostService;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.StorageService;
-import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.core.io.ByteArrayResource;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,10 +34,15 @@ public class MainController
     private final StorageService storageService;
 
 
-    @GetMapping("home")
-    public List<Post> findAllPost(){
-        return postService.findAllPost();
+    @GetMapping("/posts")
+    public Page<PostResponseDTO> getPaginatedPosts(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "3") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return postService.findPostsWithChannelInfo(pageable);
     }
+
+
 
 
 
@@ -92,17 +100,17 @@ public class MainController
         }
     }
 
-    @GetMapping("/download/{postId}")
-    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable Long postId) {
-        String fileName = postService.findPostById(postId).getVideoName();
-        byte[] data = storageService.downloadFile(fileName);
-        ByteArrayResource resource = new ByteArrayResource(data);
-        return ResponseEntity
-                .ok()
-                .contentLength(data.length)
-                .header("Content-type", "application/octet-stream")
-                .header("Content-disposition", "attachment; filename=\"" + fileName + "\"")
-                .body(resource);
-    }
+//    @GetMapping("/download/{postId}")
+//    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable Long postId) {
+//        String fileName = postService.findPostById(postId).getVideoName();
+//        byte[] data = storageService.downloadFile(fileName);
+//        ByteArrayResource resource = new ByteArrayResource(data);
+//        return ResponseEntity
+//                .ok()
+//                .contentLength(data.length)
+//                .header("Content-type", "application/octet-stream")
+//                .header("Content-disposition", "attachment; filename=\"" + fileName + "\"")
+//                .body(resource);
+//    }
 
 }

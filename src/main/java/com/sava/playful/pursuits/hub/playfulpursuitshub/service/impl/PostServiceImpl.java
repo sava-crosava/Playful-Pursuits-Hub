@@ -1,14 +1,19 @@
 package com.sava.playful.pursuits.hub.playfulpursuitshub.service.impl;
 
-import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Tag;
+import com.sava.playful.pursuits.hub.playfulpursuitshub.DTO.PostResponseDTO;
+import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Channel;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Post;
-import com.sava.playful.pursuits.hub.playfulpursuitshub.repository.TagRepository;
+import com.sava.playful.pursuits.hub.playfulpursuitshub.model.Tag;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.repository.PostRepository;
+import com.sava.playful.pursuits.hub.playfulpursuitshub.repository.TagRepository;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.PostService;
 import com.sava.playful.pursuits.hub.playfulpursuitshub.service.StorageService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,15 +29,16 @@ import java.util.Set;
 public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final TagRepository tagRepository;
-    private final StorageService service;
+    private final StorageService storageService;
+    private final ModelMapper modelMapper;
 
     @Override
     @Transactional
-    public Post createPost(Post post, MultipartFile video, MultipartFile image){
+    public Post createPost(Post post, MultipartFile video, MultipartFile thumbnail){
+        String fullVideoName = storageService.uploadVideo(video);
+        String fullThumbnailName = storageService.uploadThumbnail(thumbnail);
         Post postWithFile = savePostWithCategories(post);
-        String fullVideoName = service.uploadFile(video);
-        String fullImageName = service.uploadFile(image);
-        updateFileNames(postWithFile, fullVideoName, fullImageName);
+        updateFileNames(postWithFile, fullVideoName, fullThumbnailName);
         return postWithFile;
     }
 
@@ -44,7 +50,7 @@ public class PostServiceImpl implements PostService {
         String fileName = post.getVideoName();
         if(post != null){
             postRepository.deleteById(id);
-            service.deleteFile(fileName);
+            storageService.deleteFile(fileName);
         }
         System.out.println(title + " removed ...");
         return title + " removed ...";
@@ -58,7 +64,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public ResponseEntity<StreamingResponseBody> getPartialObject(Long postId, String rangeHeader) {
         String fileName = postRepository.findVideoNameById(postId);
-        return service.getPartialObject(fileName, rangeHeader);
+        return storageService.getPartialObject(fileName, rangeHeader);
     }
 
     @Override
@@ -99,7 +105,22 @@ public class PostServiceImpl implements PostService {
     @Override
     public void updateFileNames(Post post, String videoName, String imageName) {
             post.setVideoName(videoName);
-            post.setImageName(imageName);
+            post.setThumbnailsImageName(imageName);
             postRepository.save(post);
+    }
+    @Override
+    public Page<PostResponseDTO> findPostsWithChannelInfo(Pageable pageable) {
+        Page<Post> posts = postRepository.findAll(pageable);
+
+        return posts.map(post -> {
+            PostResponseDTO dto = modelMapper.map(post, PostResponseDTO.class);
+            dto.setThumbnailImageUrl(storageService.getThumbnailImageUrl(post.getThumbnailsImageName()));
+
+            Channel channel = post.getChannel();
+            dto.setChannelName(channel.getChannelName());
+            dto.setChannelIconImageUrl(storageService.getChannelIconImageUrl(channel.getIconImageName()));
+
+            return dto;
+        });
     }
 }

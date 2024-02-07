@@ -18,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import java.io.FileOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -30,30 +31,45 @@ public class  StorageServiceImpl implements StorageService {
     private String bucketName;
     private final AmazonS3 s3Client;
 
+    private static final String PATH_TO_CHANNEL_ICONS = "channel-icons/";
+    private static final String PATH_TO_THUMBNAILS = "thumbnails/";
+    private static final String PATH_TO_VIDEOS = "videos/";
+    private static final String PATH_TO_AVATARS = "avatars/";
+
     public StorageServiceImpl(AmazonS3 s3Client) {
         this.s3Client = s3Client;
     }
 
     @Override
-    public String uploadFile(MultipartFile file) {
+    public String uploadFile(MultipartFile file, String path) {
         File fileObj = convertMultiPartFileToFile(file);
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-        s3Client.putObject(new PutObjectRequest(bucketName, fileName, fileObj));
+        s3Client.putObject(new PutObjectRequest(bucketName, path + fileName, fileObj));
         fileObj.delete();
         return fileName;
     }
+    @Override
+    public String uploadThumbnail(MultipartFile thumbnail){
+        return uploadFile(thumbnail, PATH_TO_THUMBNAILS);
+    }
+    @Override
+    public String uploadVideo(MultipartFile video){
+        return uploadFile(video, PATH_TO_VIDEOS);
+    }
 
     @Override
-    public byte[] downloadFile(String fileName) {
-        S3Object s3Object = s3Client.getObject(bucketName, fileName);
-        S3ObjectInputStream inputStream = s3Object.getObjectContent();
-        try {
-            byte[] content = IOUtils.toByteArray(inputStream);
-            return content;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public String getFileUrl(String fileName, String path) {
+        return s3Client.getUrl(bucketName,  path + fileName).toString();
+    }
+
+    @Override
+    public String getThumbnailImageUrl(String thumbnailImageName) {
+        return getFileUrl(thumbnailImageName, PATH_TO_THUMBNAILS);
+    }
+
+    @Override
+    public String getChannelIconImageUrl(String channelIconImageName) {
+        return getFileUrl(channelIconImageName, PATH_TO_CHANNEL_ICONS);
     }
 
     @Override
@@ -68,7 +84,7 @@ public class  StorageServiceImpl implements StorageService {
 
     @Override
     public File convertMultiPartFileToFile(MultipartFile file) {
-        File convertedFile = new File(file.getOriginalFilename());
+        File convertedFile = new File(Objects.requireNonNull(file.getOriginalFilename()));
         try (FileOutputStream fos = new FileOutputStream(convertedFile)) {
             fos.write(file.getBytes());
         } catch (IOException e) {
@@ -92,7 +108,7 @@ public class  StorageServiceImpl implements StorageService {
                 .body(body);
     }
 
-    public Range parseRangeHeader(String rangeHeader, long fileSize) {
+    private Range parseRangeHeader(String rangeHeader, long fileSize) {
         if (rangeHeader == null || !rangeHeader.startsWith("bytes=")) {
             return new Range(0, fileSize - 1, fileSize);
         }
@@ -104,13 +120,13 @@ public class  StorageServiceImpl implements StorageService {
         return new Range(start, end, fileSize);
     }
 
-    public HttpHeaders createResponseHeaders(Range range, long fileSize) {
+    private HttpHeaders createResponseHeaders(Range range, long fileSize) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.set("Content-Range", "bytes " + range.getStart() + "-" + range.getEnd() + "/" + fileSize);
         return responseHeaders;
     }
 
-    public StreamingResponseBody createResponseBody(S3Object object, Range range) {
+    private StreamingResponseBody createResponseBody(S3Object object, Range range) {
         return outputStream -> {
             S3ObjectInputStream objectInputStream = object.getObjectContent();
             byte[] data = new byte[1024];
