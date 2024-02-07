@@ -33,7 +33,7 @@ public class Post {
     private String descriptions;
 
     private String videoName;
-    private String imageName;//todo change on logoImageName
+    private String thumbnailsImageName;
 
     @Builder.Default
     @Column(nullable = false, columnDefinition = "bigint default 0")

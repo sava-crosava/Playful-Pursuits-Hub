@@ -30,7 +30,7 @@ public class Channel {
     @Size(min = 5, max = 256, message = "Channel Description should be between 5 and 256 characters")
     private String channelDescription;
 
-    private String iconsImageName;
+    private String iconImageName;
 
     @Temporal(TemporalType.DATE)
     @DateTimeFormat(pattern = "dd/MM/yyyy")
